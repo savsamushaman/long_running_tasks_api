@@ -3,7 +3,6 @@ from celery.result import AsyncResult
 from fastapi import FastAPI
 
 from models import Task
-from worker.tasks import execute_task
 
 
 class TaskDataBase:
@@ -13,7 +12,7 @@ class TaskDataBase:
         self.data = []
 
     def add_task(self, task_dict):
-        task_id = execute_task.delay(task_dict['item_id']).task_id
+        task_id = cel_app.send_task('tasks.execute_task', kwargs={'item_id': task_dict['item_id']}).id
         task_dict['task_id'] = task_id
         self.data.append(task_dict)
         print(">>> Task successfully added to DB")
@@ -29,7 +28,7 @@ class TaskDataBase:
 
 app = FastAPI()
 db = TaskDataBase()
-cel_app = Celery('tasks', backend='redis://localhost', broker='redis://localhost')
+cel_app = Celery('worker', backend='redis://redis:6379/0', broker='redis://redis:6379/0')
 
 
 @app.get('/')
