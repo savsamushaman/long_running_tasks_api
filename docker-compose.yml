@@ -2,15 +2,18 @@ version: "3.7"
 services:
   fast_app:
     build: './fast_app'
+    restart: always
+    ports:
+      - "80:80"
     depends_on:
       - redis
-      - worker
 
   worker:
     build: './worker'
     user: nobody
     depends_on:
       - redis
+      - fast_app
 
   redis:
     image: 'redis:5'
