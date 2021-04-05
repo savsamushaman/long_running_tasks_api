@@ -1,5 +1,3 @@
-import uuid
-
 from celery.result import AsyncResult
 from fastapi import FastAPI
 
@@ -14,11 +12,8 @@ class TaskDataBase:
         self.data = []
 
     def add_task(self, task_dict):
-        # temporary task_id - needs UUID generator
-        task_id = uuid.uuid4().hex
+        task_id = execute_task.delay(task_dict['item_id']).task_id
         task_dict['task_id'] = task_id
-        celery_id = execute_task.delay(task_dict['item_id'], task_id).task_id
-        task_dict['celery_id'] = celery_id
         self.data.append(task_dict)
         print(">>> Task successfully added to DB")
 
@@ -53,7 +48,7 @@ def get_single_task(task_id: str):
     if not task:
         return {'response': 'task not found'}
 
-    result = AsyncResult(task['celery_id'], app=cel_app)
+    result = AsyncResult(task['task_id'], app=cel_app)
 
     response = {'task_id': task['task_id'], 'item_id': task['item_id'], 'status': result.status,
                 'result': result.result}
