@@ -1,8 +1,9 @@
+from celery import Celery
 from celery.result import AsyncResult
 from fastapi import FastAPI
 
 from models import Task
-from tasks import execute_task, cel_app
+from worker.tasks import execute_task
 
 
 class TaskDataBase:
@@ -28,6 +29,7 @@ class TaskDataBase:
 
 app = FastAPI()
 db = TaskDataBase()
+cel_app = Celery('tasks', backend='redis://localhost', broker='redis://localhost')
 
 
 @app.get('/')
