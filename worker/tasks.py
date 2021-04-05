@@ -9,8 +9,8 @@ app = Celery('tasks', backend='redis://redis:6379/0', broker='redis://redis:6379
 
 
 @app.task()
-def execute_task(item_id):
-    print('>>> Long Running Task starting')
+def execute_task(item_id, tasks_id):
+    print(f'>>> Long Running Task of Item: {item_id} with Tasks_id : {tasks_id} started..')
     duration = randint(10, 20)
     sleep(duration)
     return duration

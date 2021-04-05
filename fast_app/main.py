@@ -1,18 +1,22 @@
 from celery import Celery
 from celery.result import AsyncResult
 from fastapi import FastAPI
+import uuid
 
 from models import Task
 
 
 class TaskDataBase:
-    """Burner database, DO NOT, UNDER ANY CASE USE IN PROD."""
+    """Burner database, DO NOT!, UNDER ANY CASE USE IN PROD."""
 
     def __init__(self):
         self.data = []
 
     def add_task(self, task_dict):
-        task_id = cel_app.send_task('tasks.execute_task', kwargs={'item_id': task_dict['item_id']}).id
+        # saves task to DB + send task to queue (segregate ??)
+        task_dict['tasks_id'] = uuid.uuid4()
+        task_id = cel_app.send_task('tasks.execute_task',
+                                    kwargs={'item_id': task_dict['item_id'], 'tasks_id': task_dict['tasks_id']}).id
         task_dict['task_id'] = task_id
         self.data.append(task_dict)
         print(">>> Task successfully added to DB")
@@ -51,7 +55,8 @@ def get_single_task(task_id: str):
 
     result = AsyncResult(task['task_id'], app=cel_app)
 
-    response = {'task_id': task['task_id'], 'item_id': task['item_id'], 'status': result.status,
+    response = {'task_id': task['task_id'], 'item_id': task['item_id'], 'unique_tasks_id': task['tasks_id'],
+                'status': result.status,
                 'result': result.result}
 
     return response
